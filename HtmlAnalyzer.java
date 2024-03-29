@@ -9,7 +9,6 @@ import java.io.IOException;
 class TreeNode {
     String tag;
     ArrayList<TreeNode> children;
-    int depth;
 
     public TreeNode(String tag) {
         this.tag = tag;
@@ -31,6 +30,7 @@ class Tree {
 
 public class HtmlAnalyzer {
 
+    // Function to read HTML content from the given URL and return it as an ArrayList of strings
     public static ArrayList<String> HTMLtoString(String url) throws Exception {
         URL oracle = new URL(url);
         BufferedReader in = new BufferedReader(new InputStreamReader(oracle.openStream()));
@@ -38,6 +38,7 @@ public class HtmlAnalyzer {
         ArrayList<String> stringLines = new ArrayList<>();
         String inputLine;
 
+        // Read each line of the HTML content and trim any leading or trailing whitespace
         while ((inputLine = in.readLine()) != null) {
             String line = inputLine.trim();
             stringLines.add(line);
@@ -48,12 +49,7 @@ public class HtmlAnalyzer {
         return stringLines;
     }
 
-    public static void printLines(ArrayList<String> lines) {
-        for (int i = 0; i < lines.size(); i++){
-            System.out.println(lines.get(i));
-        }
-    }
-
+    // Function to check if two HTML tags are matching opening and closing tags
     public static boolean areMatchingTags(String openingTag, String closingTag) {
         String openingTagName = openingTag.replaceAll("[^a-zA-Z]", "");
         String closingTagName = closingTag.replaceAll("[^a-zA-Z]", "");
@@ -61,6 +57,7 @@ public class HtmlAnalyzer {
         return openingTagName.equals(closingTagName) && openingTag.startsWith("<" + openingTagName) && closingTag.startsWith("</" + closingTagName);
     }
 
+    // Function to parse the HTML content and construct a tree structure representing the document
     public static Tree linesToTree(ArrayList<String> lines, boolean[] malformedHTML) {
         Tree tree = new Tree();
         TreeNode currentNode = null;
@@ -70,6 +67,7 @@ public class HtmlAnalyzer {
             for (String line : lines) {
                 if (line.contains("<")) {
                     if (!line.contains("/")) {
+                        // Create a new node for an opening tag and add it to the tree structure
                         TreeNode newNode = new TreeNode(line);
 
                         if (!stack.isEmpty()) {
@@ -85,6 +83,7 @@ public class HtmlAnalyzer {
                         currentNode = newNode;
 
                     } else if (line.contains("/")) {
+                        // Handle closing tags and check if they match with the corresponding opening tag
                         if(!areMatchingTags(stack.peek().tag, line)){
                             malformedHTML[0] = true;
                         }
@@ -97,15 +96,18 @@ public class HtmlAnalyzer {
                         }
                     }
                 } else {
+                    // Handle text content within HTML tags by adding it as a child of the current node
                     if (currentNode != null) {
                         currentNode.addChild(new TreeNode(line));
                     }
                 }
             }
         } catch (EmptyStackException e) {
+            // Handle the case where there are more closing tags than opening tags
             malformedHTML[0] = true;
         }
 
+        // Check if there are unmatched opening tags remaining in the stack
         if(!stack.isEmpty()){
             malformedHTML[0] = true;
         }
@@ -113,7 +115,7 @@ public class HtmlAnalyzer {
         return tree;
     }
 
-
+    // Function to print the tree structure in a hierarchical format
     private static void printTree(TreeNode node, int level, ArrayList<String> text) {
         if (node != null) {
             StringBuilder sb = new StringBuilder();
@@ -127,16 +129,19 @@ public class HtmlAnalyzer {
         }
     }
 
+    // Function to find the deepest node in the tree structure
     public static String findDeepestNode(ArrayList<String> text) {
         int maxIndentation = -1;
         String deepestNode = null;
 
+        // Iterate through each line of the hierarchical representation of the tree
         for (String line : text) {
             int indentation = 0;
             while (line.charAt(indentation) == '\t') {
                 indentation++;
             }
 
+            // Find the deepest node by comparing indentation levels
             if (indentation > maxIndentation) {
                 maxIndentation = indentation;
                 deepestNode = line.trim();
